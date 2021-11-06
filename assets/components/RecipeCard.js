@@ -1,175 +1,252 @@
-// RecipeCard.js
+// RecipeExpand.js
 
-class RecipeCard extends HTMLElement {
+class RecipeExpand extends HTMLElement {
   constructor() {
-    super(); // Inheret everything from HTMLElement
-
-    // Attach the shadow DOM and append this markup / stlying inside
-    // The shadow root will help us keep everything separated
+    super();
     this.attachShadow({ mode: 'open' });
-  }
 
-  set data(data) {
-    if (!data) return;
+    // Create styles and root element
+    const styles = document.createElement('style');
+    const article = document.createElement('article');
 
-    // Used to access the actual data object
-    this.json = data;
-
-    const style = document.createElement('style');
-    const card = document.createElement('article');
-    style.innerHTML = `
-      * {
-        font-family: sans-serif;
-        margin: 0;
-        padding: 0;
-      }
-      
-      a {
-        text-decoration: none;
-      }
-      a:hover {
-        text-decoration: underline;
-      }
-      
+    // Fill in styles and root element
+    styles.innerHTML = `
       article {
-        align-items: center;
-        border: 1px solid rgb(223, 225, 229);
-        border-radius: 8px;
-        display: grid;
-        grid-template-rows: 118px 56px 14px 18px 15px 36px;
-        height: auto;
-        row-gap: 5px;
-        padding: 0 16px 16px 16px;
-        width: 178px;
-
         background-color: white;
+        box-shadow: 0 0 10px rgb(0 0 0 / 15%);
+        margin: 30px auto;
+        max-width: 720px;
+        padding: 25px;
         transition: all 0.2s ease;
-        user-select: none;
+        width: 80%;
       }
-
-      article:hover {
-        border-radius: 8px;
-        cursor: pointer;
-        filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.2));
-        transition: all 0.2s ease;
-        transform: scale(1.02);
-      }
-
-      div.rating {
+      div.rating--wrapper {
         align-items: center;
         column-gap: 5px;
         display: flex;
+        justify-items: center;
+        margin-top: 10px;
       }
       
-      div.rating > img {
+      div.rating--wrapper > img {
         height: auto;
         display: inline-block;
         object-fit: scale-down;
         width: 78px;
       }
-      article > img {
-        border-top-left-radius: 8px;
-        border-top-right-radius: 8px;
-        height: 118px;
+      header {
+        align-items: flex-start;
+        column-gap: 10px;
+        display: grid;
+        grid-template-areas:
+         'title title img'
+         'meta meta img'
+         'desc desc img';
+      }
+      header p {
+        margin: 0;
+      }
+      header > h1 {
+        font-size: 2rem;
+        font-weight: 500;
+        grid-area: title;
+        margin: -10px 0 0 0;
+        padding: 0;
+      }
+      h2 {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin: 35px 0 0 0;
+      }
+      header > div.meta--wrapper {
+        display: grid;
+        grid-area: meta;
+        margin: 10px 0;
+        row-gap: 4px;
+      }
+      header > div.meta--wrapper p,
+      main > div.rating--wrapper {
+        color: gray;
+        font-style: italic;
+      }
+      header > div.meta--wrapper 
+      :is(.meta--yield, .meta--total-time, .meta--categories) {
+        color: black;
+        font-style: normal;
+        font-weight: 600;
+      }
+      header img.thumbnail {
+        aspect-ratio: 1;
+        grid-area: img;
         object-fit: cover;
-        margin-left: -16px;
-        width: calc(100% + 32px);
-      }
-      p.ingredients {
-        height: 32px;
-        line-height: 16px;
-        padding-top: 4px;
         overflow: hidden;
+        width: 230px;
       }
-      
-      p.organization {
-        color: black !important;
-      }
-      p.title {
-        display: -webkit-box;
-        font-size: 16px;
-        height: 36px;
-        line-height: 18px;
+      header p.description {
+        height: 62px;
+        line-height: 20px;
         overflow: hidden;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
+        text-overflow: ellipsis;
       }
-      p:not(.title), span, time {
-        color: #70757A;
-        font-size: 12px;
+      main > .section--ingredients,
+      main > .section--instructions {
+        font-size: 1.1rem;
+      }
+      span.rating-total {
+        margin-left: -2px;
+      }
+      ol, ul {
+        margin-top: 10px;
+      }
+      ol li:not(:first-child) {
+        margin-top: 15px;
+      }
+      ol li::marker {
+        padding-right: 5px;
+      }
+      ul li {
+        padding-left: 2px;
+      }
+      ul li:not(:first-child) {
+        margin-top: 8px;
       }
     `;
+    article.innerHTML = `
+      <header>
+        <h1></h1>
+        <div class="meta--wrapper">
+          <p>yield: <span class="meta--yield"></span></p>
+          <p>total time: <time class="meta--total-time"></time></p>
+          <p>categories: <span class="meta--categories"></span></p>
+        </div>
+        <p class="description"></p>
+        <img src="" alt="" class="thumbnail" />
+      </header>
+      <main>
+        <div class="rating--wrapper">
+          <span class="rating--value"></span>
+          <img src="" alt="" class="rating--star-img" />
+          <span class="rating--total"></span>
+        </div>
+        <section class="section--ingredients">
+          <h2>INGREDIENTS</h2>
+          <ul></ul>
+        </section>
+        <section class="section--instructions">
+          <h2>INSTRUCTIONS</h2>
+          <ol></ol>
+        </section>
+      </main>
+    `;
 
-    // Grab the title
-    const titleText = getTitle(data);
-    const title = document.createElement('p');
-    title.classList.add('title');
+    // Append elements to the shadow root
+    this.shadowRoot.append(styles, article);
+  }
 
-    // Grab the recipe link
-    const href = getUrl(data);
-    const link = document.createElement('a');
-    link.setAttribute('href', href);
-    link.innerText = titleText;
-    title.appendChild(link); // Make the title a link
+  /**
+   * Sets the recipe that will be used inside the <recipe-expand> element.
+   * Overwrites the previous recipe, fair warning.
+   */
+  set data(data) {
+    this.json = data;
 
-    // Grab the thumbnail
-    const imageUrl = getImage(data);
-    const image = document.createElement('img');
-    image.setAttribute('src', imageUrl);
-    image.setAttribute('alt', titleText);
+    // Reset HTML
+    this.shadowRoot.querySelector('article').innerHTML = `
+      <header>
+        <h1></h1>
+        <div class="meta--wrapper">
+          <p>yield: <span class="meta--yield"></span></p>
+          <p>total time: <time class="meta--total-time"></time></p>
+          <p>categories: <span class="meta--categories"></span></p>
+        </div>
+        <p class="description"></p>
+        <img src="" alt="" class="thumbnail" />
+      </header>
+      <main>
+        <div class="rating--wrapper">
+          <span class="rating--value"></span>
+          <img src="" alt="" class="rating--star-img" />
+          <span class="rating--total"></span>
+        </div>
+        <section class="section--ingredients">
+          <h2>INGREDIENTS</h2>
+          <ul></ul>
+        </section>
+        <section class="section--instructions">
+          <h2>INSTRUCTIONS</h2>
+          <ol></ol>
+        </section>
+      </main>
+    `;
 
-    // Grab the organization name
-    const organizationText = getOrganization(data);
-    const organization = document.createElement('p');
-    organization.classList.add('organization');
-    organization.innerText = organizationText;
+    // Set Title
+    const title = getTitle(data).toUpperCase();
+    this.shadowRoot.querySelector('header > h1').innerHTML = title;
 
-    // Grab the reviews
+    // Set the Servings yield
+    const servingsYield = getYield(data);
+    this.shadowRoot.querySelector('.meta--yield').innerHTML = servingsYield;
+
+    // Set the total time
+    const totalTime = convertTime(searchForKey(data, 'totalTime'));
+    this.shadowRoot.querySelector('.meta--total-time').innerHTML = totalTime;
+
+    // Set Categories
+    const categories = getCategories(data);
+    this.shadowRoot.querySelector('.meta--categories').innerHTML = categories;
+
+    // Set Description
+    const description = getDescription(data);
+    this.shadowRoot.querySelector('p.description').innerHTML = description;
+
+    // Set Image
+    const imgSrc = getImage(data);
+    const img = this.shadowRoot.querySelector('img.thumbnail');
+    img.setAttribute('src', imgSrc);
+    img.setAttribute('alt', title);
+
+    // Set Ratings
     const ratingVal = searchForKey(data, 'ratingValue');
-    const ratingTotal = searchForKey(data, 'ratingCount');
-    const rating = document.createElement('div');
-    rating.classList.add('rating');
+    let ratingTotal = searchForKey(data, 'ratingCount');
+    const rating = this.shadowRoot.querySelector('.rating--wrapper');
     const numStars = Math.round(ratingVal);
     if (ratingVal) {
       rating.innerHTML = `
-        <span>${ratingVal}</span>
-        <img src="/assets/images/icons/${numStars}-star.svg" alt="${numStars} stars">
+      <img src="assets/images/icons/${numStars}-star.svg" alt="${numStars} stars">
+      <span>${ratingVal}</span>
+      from
       `;
-      if (ratingTotal) {
-        rating.innerHTML += `<span>(${ratingTotal})</span>`;
+      if (!ratingTotal) {
+        ratingTotal = 'some';
       }
+      rating.innerHTML += `<span class="rating-total">${ratingTotal} votes</span>`;
     } else {
       rating.innerHTML = `
         <span>No Reviews</span>
       `;
     }
 
-    // Grab the total time
-    const totalTime = searchForKey(data, 'totalTime');
-    const time = document.createElement('time');
-    time.innerText = convertTime(totalTime);
+    // Set Ingredients
+    const ingredients = getIngredients(data);
+    ingredients.forEach(ingredient => {
+      const listItem = document.createElement('li');
+      listItem.innerHTML = ingredient;
+      this.shadowRoot.querySelector('.section--ingredients > ul').append(listItem);
+    });
 
-    // Grabt the ingredients
-    const ingredientsArr = searchForKey(data, 'recipeIngredient');
-    const ingredientsList = createIngredientList(ingredientsArr);
-    const ingredients = document.createElement('p');
-    ingredients.classList.add('ingredients');
-    ingredients.innerText = ingredientsList;
-
-    // Add all of the elements to the card
-    card.appendChild(image);
-    card.appendChild(title);
-    card.appendChild(organization);
-    card.appendChild(rating);
-    card.appendChild(time);
-    card.appendChild(ingredients);
-
-    this.shadowRoot.append(style, card);
+    // Set Instructions
+    const instructions = getInstructions(data);
+    instructions.forEach(instruction => {
+      const listItem = document.createElement('li');
+      listItem.innerHTML = instruction;
+      this.shadowRoot.querySelector('.section--instructions > ol').append(listItem);
+    });
   }
 
+  /**
+   * Returns the object of the currect recipe being used.
+   */
   get data() {
-    // Stored in .json to avoid calling set data() recursively in a loop.
-    // .json is also exposed so you can technically use that as well
     return this.json;
   }
 }
@@ -207,6 +284,68 @@ function getTitle(data) {
       if (data['@graph'][i]['@type'] == 'Recipe') {
         if (data['@graph'][i]['name']) return data['@graph'][i]['name'];
       };
+    }
+  }
+  return null;
+}
+
+/**
+ * Extract the yield of the recipe from the given recipe schema JSON obejct
+ * @param {Object} data Raw recipe JSON to find the image of
+ * @returns {String} If found, returns the recipe yield
+ */
+function getYield(data) {
+  if (data.recipeYield) return data.recipeYield;
+  if (data['@graph']) {
+    for (let i = 0; i < data['@graph'].length; i++) {
+      if (data['@graph'][i]['@type'] == 'Recipe') {
+        if (data['@graph'][i]['recipeYield']) {
+          if (Array.isArray(data['@graph'][i]['recipeYield'])) {
+            return data['@graph'][i]['recipeYield'][0];
+          } else if (typeof data['@graph'][i]['recipeYield'] == 'string') {
+            return data['@graph'][i]['recipeYield'];
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Extract the categories of the recipe from the given recipe schema JSON obejct
+ * @param {Object} data Raw recipe JSON to find the image of
+ * @returns {String} If found, returns the recipe categories as a string
+ */
+function getCategories(data) {
+  let categories = null;
+  if (data.recipeCategory) {
+    categories = data.recipeCategory
+  } else if (data['@graph']) {
+    for (let i = 0; i < data['@graph'].length; i++) {
+      if (data['@graph'][i]['@type'] == 'Recipe') {
+        if (data['@graph'][i]['recipeCategory']) {
+          categories = data['@graph'][i]['recipeCategory'];
+        }
+      };
+    }
+  }
+  if (Array.isArray(categories)) categories = categories.join(', ');
+  return categories.toLowerCase();
+}
+
+/**
+ * Extract the description of the recipe from the given recipe schema JSON obejct
+ * @param {Object} data Raw recipe JSON to find the image of
+ * @returns {String} If found, returns the recipe description
+ */
+function getDescription(data) {
+  if (data.description) return data.description;
+  if (data['@graph']) {
+    for (let i = 0; i < data['@graph'].length; i++) {
+      if (data['@graph'][i]['@type'] == 'Recipe') {
+        return data['@graph'][i]['description'];
+      }
     }
   }
   return null;
@@ -295,36 +434,64 @@ function convertTime(time) {
 }
 
 /**
- * Takes in a list of ingredients raw from imported data and returns a neatly
- * formatted comma separated list.
- * @param {Array} ingredientArr The raw unprocessed array of ingredients from the
- *                              imported data
- * @return {String} the string comma separate list of ingredients from the array
+ * Extract the ingredients of the recipe from the given recipe schema JSON obejct
+ * @param {Object} data Raw recipe JSON to find the image of
+ * @returns {Array} If found, returns the recipe ingredients
  */
-function createIngredientList(ingredientArr) {
-  let finalIngredientList = '';
-
-  /**
-   * Removes the quantity and measurement from an ingredient string.
-   * This isn't perfect, it makes the assumption that there will always be a quantity
-   * (sometimes there isn't, so this would fail on something like '2 apples' or 'Some olive oil').
-   * For the purposes of this lab you don't have to worry about those cases.
-   * @param {String} ingredient the raw ingredient string you'd like to process
-   * @return {String} the ingredient without the measurement & quantity 
-   * (e.g. '1 cup flour' returns 'flour')
-   */
-  function _removeQtyAndMeasurement(ingredient) {
-    return ingredient.split(' ').splice(2).join(' ');
+function getIngredients(data) {
+  if (data.recipeIngredient) {
+    if (typeof data.recipeIngredient == 'string') {
+      return data.recipeIngredient.slit('. ');
+    }
+    return data.recipeIngredient;
+  };
+  if (data['@graph']) {
+    for (let i = 0; i < data['@graph'].length; i++) {
+      if (data['@graph'][i]['@type'] == 'Recipe') {
+        if (typeof data['@graph'][i]['recipeIngredient'] == 'string') {
+          return data['@graph'][i]['recipeIngredient'].slit('. ');
+        }
+        return data['@graph'][i]['recipeIngredient'];
+      };
+    }
   }
-
-  ingredientArr.forEach(ingredient => {
-    ingredient = _removeQtyAndMeasurement(ingredient);
-    finalIngredientList += `${ingredient}, `;
-  });
-
-  // The .slice(0,-2) here gets ride of the extra ', ' added to the last ingredient
-  return finalIngredientList.slice(0, -2);
+  return null;
 }
 
-// Define the Class so you can use it as a custom element
-customElements.define('recipe-card', RecipeCard);
+/**
+ * Extract the instructions of the recipe from the given recipe schema JSON obejct.
+ * This ones a bit messy and optimally should be refactored but it works.
+ * @param {Object} data Raw recipe JSON to find the image of
+ * @returns {Array} If found, returns the recipe instructions
+ */
+function getInstructions(data) {
+  if (data.recipeInstructions) {
+    if (typeof data.recipeInstructions == 'string') {
+      return data.recipeInstructions.split('. ');
+    }
+    return data.recipeInstructions;
+  };
+  if (data['@graph']) {
+    for (let i = 0; i < data['@graph'].length; i++) {
+      if (data['@graph'][i]['@type'] == 'Recipe') {
+        if (data['@graph'][i]['recipeInstructions'] == 'string') {
+          return data['@graph'][i]['recipeInstructions'].split('. ');
+        }
+        if (data['@graph'][i]['recipeInstructions'][0]['itemListElement']) {
+          const instructionArr = [];
+          data['@graph'][i]['recipeInstructions'].forEach(instrObj => {
+            instrObj.itemListElement.forEach(instruction => {
+              instructionArr.push(instruction.text);
+            });
+          });
+          return instructionArr;
+        } else {
+          return data['@graph'][i]['recipeInstructions'].map(instr => instr.text);
+        }
+      };
+    }
+  }
+  return null;
+}
+
+customElements.define('recipe-expand', RecipeExpand);
