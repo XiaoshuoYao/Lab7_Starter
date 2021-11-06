@@ -70,14 +70,14 @@
     var hash;
  
     if(page == 'home'){
-      hash = 'Lab7_Starter/';
+      hash = '';
     }
     else{
       hash = '#' + page;
     }
-     
+    
     if(!statePopped && window.location.hash != hash){
-      history.pushState({'page' : page}, '', window.location.origin + hash);
+      history.pushState({'page' : page}, '', window.location.href.split('#')[0] + hash);
     }
  
     this[page]();
