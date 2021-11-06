@@ -70,7 +70,7 @@
     var hash;
  
     if(page == 'home'){
-      hash = '';
+      hash = 'Lab7_Starter/';
     }
     else{
       hash = '#' + page;
