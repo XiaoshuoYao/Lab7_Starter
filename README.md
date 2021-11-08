@@ -1,3 +1,3 @@
 # Lab 7 - Starter Code
 
-https://github.com/XiaoshuoYao/Lab7_Starter
+https://xiaoshuoyao.github.io/Lab7_Starter/
